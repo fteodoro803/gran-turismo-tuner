@@ -11,7 +11,7 @@ A static web app for sharing Gran Turismo 7 tunes as links. You pick a car, fill
 - Runs as a Lab tool on the owner's portfolio (`fteodoro803/portfolio`), served from `/lab/<id>/`.
 - Text only for now: no car photos and no manufacturer logos (D1).
 
-**Stack:** TypeScript, React 19, Vite, Vitest, oxlint. Plain static output in `dist/`.
+**Stack:** TypeScript, React 19, Vite, Vitest, Testing Library, oxlint. Plain static output in `dist/`.
 
 ## Origin and current scope
 
