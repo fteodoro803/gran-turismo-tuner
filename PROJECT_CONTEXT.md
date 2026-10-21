@@ -17,8 +17,8 @@ A static web app for sharing Gran Turismo 7 tunes as links. You pick a car, fill
 
 Started in October 2026 from the idea that GT7 tune sharing by screenshot and spreadsheet is slow to update and hard to search. The first release covers a car picker, the 17 tuning sections, unit conversion and share links. The build order is D0 to D10:
 
-- **Done:** D1 (scaffold) and D2 (tune data model).
-- **Next:** D3 (car data from screenshots), then D4 (link codec), D5 (car picker), D6 and D7 (form), D8 (units), D9 (view and share), D10 (ship to the portfolio).
+- **Done:** D1 (scaffold), D2 (tune data model) and D6 (tuning form, PR #19).
+- **Next:** D3 (car data from screenshots), D4 (link codec), D5 (car picker), D7 (special inputs), D8 (units), D9 (view and share), D10 (ship to the portfolio), plus a design pass (#20). Each is an issue on GitHub.
 
 Portfolio rules the build must follow: relative asset paths (`base: './'`), an `index.html` in the output folder, a "← Back to Lab" link, no dependency on the portfolio's CSS, and no backend. The portfolio does not rebuild when this repo changes, so run its deploy workflow after each release.
 
