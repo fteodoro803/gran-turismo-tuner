@@ -42,9 +42,7 @@ Needs a backend, which the static-site design rules out for now.
 
 Pieces marked new or learning in `~/.claude/learning/familiarity.md`, where Claude slows down and explains from the anchor:
 
-- **Vitest**: new, builds on Mocha + Chai.
 - **Vite**: new, builds on Meteor.
-- **React 19**: learning, builds on Flutter.
 
 ## How to use this file
 
