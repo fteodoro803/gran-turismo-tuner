@@ -24,6 +24,7 @@ The log of decisions made about this project, and why. Open questions live on Gi
 | D6 | **The tune schema is data, and types, defaults and rules are derived from it. An empty number is unset (left out of the link). A value for a locked field is kept while editing and dropped when the tune is normalised.** One place to add a field. A shared tune can be partly filled in. | `src/tune/schema.ts`, `CLAUDE.md` |
 | D7 | **Drivetrain rules:** front differential inputs are enabled for FF, 4WD and Other, rear for everything except FF, and the center differential and torque split only for 4WD. Suspension inputs are locked unless the suspension is Fully Customised. The UI section is named Turbocharger/Supercharger. | `src/tune/rules.ts` |
 | D8 | **Car data comes from the owner's own screenshots of the official list, written to a flat `cars.json` with our own readable slug ids and no Sony id field.** An id is never changed once it has appeared in a shared link. No scraping. | `CLAUDE.md` |
+| D9 | **Tuning form (from #6): number inputs take free typing and clamp and round on blur or Enter, an empty field means unset, a temporary "Drivetrain (preview)" dropdown feeds the rules until the car picker (#12) lands, and component tests use Testing Library.** The torque split and gear list wait for #13. Styling and layout are expected to change in the design pass (#20), so they are not recorded as decided. | `src/components/NumberInput.tsx` |
 
 ---
 
