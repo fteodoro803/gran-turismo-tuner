@@ -1,15 +1,20 @@
 import { useState } from 'react'
+import { CarPicker } from './components/CarPicker'
+import type { CarChoice } from './components/CarPicker'
 import { TuneForm } from './components/TuneForm'
 import type { ChangeHandler } from './components/FieldInput'
-import { DRIVETRAINS } from './tune/schema'
+import { CARS } from './data/cars'
 import { defaultTune } from './tune/defaults'
-import type { Drivetrain, Tune } from './tune/types'
+import type { Tune } from './tune/types'
 
-const isDrivetrain = (s: string): s is Drivetrain => (DRIVETRAINS as readonly string[]).includes(s)
-
+// Two pages, switched by plain state: the car picker first, then the tuning form (#12).
+//
+// The page lives in memory and not in the URL, so it doesn't clash with the share-link format
+// that puts the tune after the `#` (#5). The tune is kept when you go back to change the car.
 export default function App() {
   const [tune, setTune] = useState<Tune>(defaultTune)
-  const [drivetrain, setDrivetrain] = useState<Drivetrain | undefined>()
+  const [choice, setChoice] = useState<CarChoice | undefined>()
+  const [page, setPage] = useState<'picker' | 'tune'>('picker')
 
   // Sets one field, or removes its key when the value is undefined (an emptied number box).
   //
@@ -26,30 +31,23 @@ export default function App() {
 
   return (
     <main>
-      <a href="../">← Back to Lab</a>
-      <h1>GT7 Tune Sharing</h1>
-      <p>Fan project, not affiliated with Sony Interactive Entertainment or Polyphony Digital.</p>
-
-      {/* ===== Drivetrain preview (temporary) ===== */}
-      {/* Stands in for the car picker until issue #12 lands, then this block is removed. */}
-      <div className="field preview-drivetrain">
-        <label htmlFor="drivetrain-preview">Drivetrain (preview)</label>
-        <select
-          id="drivetrain-preview"
-          value={drivetrain ?? ''}
-          onChange={(e) => setDrivetrain(isDrivetrain(e.target.value) ? e.target.value : undefined)}
-        >
-          <option value="">None chosen</option>
-          {DRIVETRAINS.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* ===== Tuning form ===== */}
-      <TuneForm tune={tune} drivetrain={drivetrain} onChange={handleChange} />
+      {page === 'tune' && choice ? (
+        <TuneForm
+          tune={tune}
+          choice={choice}
+          onChange={handleChange}
+          onChangeCar={() => setPage('picker')}
+        />
+      ) : (
+        <CarPicker
+          cars={CARS}
+          initial={choice}
+          onEnter={(c) => {
+            setChoice(c)
+            setPage('tune')
+          }}
+        />
+      )}
     </main>
   )
 }

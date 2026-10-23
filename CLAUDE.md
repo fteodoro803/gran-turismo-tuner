@@ -39,6 +39,6 @@ How code is written in this project. A decision in `DECISIONS.md` that creates a
 
 **Assets:** Use relative paths only. The app is served from `/lab/<id>/` on the portfolio, so `base` stays `'./'` in `vite.config.ts`. Everything in `dist/` is public.
 
-**No third-party artwork:** Don't add Sony or manufacturer images, logos or scraped content to the repo (D1). Raw screenshots stay in the git-ignored `screenshots/` folder.
+**No third-party artwork:** Don't add Sony or manufacturer images, logos or scraped content to the app, the build or `dist/` (D1). The one exception is the reference screenshots in `docs/reference/` (D10), which are never imported by code or served. Any other raw screenshots stay in the git-ignored `screenshots/` folder. Temporary exception (D11): Sony's car pictures live only in the git-ignored `public/car-images/<manufacturer>/<car>.png`, each named by its car's `image` field in `cars.json`, for a local design preview. Never commit them, and never deploy a `dist/` built while they are there. Replace them with the owner's own screenshots before release.
 
 **npm:** `.npmrc` sets `legacy-peer-deps=true` because npm 10 install fails on the default Vite template without it. Keep it so the portfolio's `npm ci` works.

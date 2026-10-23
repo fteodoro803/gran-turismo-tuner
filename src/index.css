@@ -1,26 +1,26 @@
-/* Theme tokens: light by default, dark when the OS asks for it. Every colour below uses these. */
-:root {
-  --bg: #f5f6f8;
-  --surface: #ffffff;
-  --text: #1b1e24;
-  --muted: #5d6573;
-  --border: #d5d9e0;
-  --accent: #1f6feb;
-  --disabled-bg: #eceef2;
-  color-scheme: light dark;
-  font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-}
+/* Theme tokens: one dark palette, like the game's settings sheets (#20). Every colour below uses these.
+   Slate: mid blue-grey with a sky-blue accent. Rajdhani is loaded in main.tsx at weight 700 only,
+   because its lighter weights read too thin at small sizes.
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14161a;
-    --surface: #1d2026;
-    --text: #e8eaee;
-    --muted: #9aa3b2;
-    --border: #343944;
-    --accent: #5b9bff;
-    --disabled-bg: #262a31;
-  }
+   Every size is in rem. useFitToScreen changes the root font size to make the whole page fit the
+   screen, so a pixel size here would not scale with it (borders are the only exception). */
+:root {
+  --bg: #262b33;
+  --surface: #333a45;
+  --field: #1d2128;
+  --text: #f4f6f9;
+  --muted: #bcc4cf;
+  --border: #4d5663;
+  --accent: #5cc4ff;
+  --focus: #5cc4ff;
+  --focus-tint: rgba(92, 196, 255, 0.14);
+  --disabled-bg: #262b33;
+  --label-size: 1.1875rem;
+  --value-size: 1.25rem;
+  --row-height: 2.25rem;
+  color-scheme: dark;
+  font: 16px/1.5 'Rajdhani', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
 }
 
 * {
@@ -34,74 +34,107 @@ body {
 }
 
 a {
-  color: var(--accent);
+  color: var(--focus);
 }
 
-/* Page: a single column, narrow on desktop so lines stay readable. */
+/* Page: the full width, so the column count chosen by useFitToScreen can use all of it. */
 main {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
 }
 
-h1 {
-  margin: 0.5rem 0;
-  font-size: 1.6rem;
+/* Hidden from sight but still read by screen readers and found by label. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
-/* Fields: label above control; every control is tall enough to tap and 16px to stop iOS zoom. */
+/* Rows: label on the left, value box on the right. */
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 50%);
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--row-height);
 }
 
 .field label {
-  font-size: 0.9rem;
-  color: var(--muted);
+  font-size: var(--label-size);
+  line-height: 1.15;
+  color: var(--text);
 }
 
 input[type='text'],
 select {
   width: 100%;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.75rem;
+  min-height: var(--row-height);
+  padding: 0.125rem 0.5rem;
   font: inherit;
+  font-size: var(--value-size);
   color: var(--text);
-  background: var(--surface);
+  background: var(--field);
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: 0.1875rem;
+}
+
+input[type='text'] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 input:focus-visible,
-select:focus-visible,
-summary:focus-visible {
-  outline: 2px solid var(--accent);
+select:focus-visible {
+  outline: 2px solid var(--focus-tint);
   outline-offset: 2px;
+  border-color: var(--focus);
 }
 
-/* Toggles sit on one row: checkbox then label. */
+/* The row holding the focused control gets a tint and an accent bar, like the game's cursor. */
+.field,
+.pair-row {
+  border-left: 3px solid transparent;
+  padding-left: 0.375rem;
+}
+
+.field:focus-within,
+.pair-row:focus-within {
+  background: var(--focus-tint);
+  border-left-color: var(--focus);
+}
+
+/* Inside a pair the cells are bare, so the row above carries the highlight. */
+.pair-row .field {
+  display: block;
+  min-height: 0;
+  padding-left: 0;
+  border-left: 0;
+  background: none;
+}
+
+/* Toggles: label on the left, checkbox on the right, like the other rows. */
 .field-toggle {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 2.75rem;
-}
-
-.field-toggle label {
-  font-size: 1rem;
-  color: var(--text);
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }
 
 .field-toggle input {
+  flex: none;
   width: 1.25rem;
   height: 1.25rem;
+  margin: 0 0.25rem;
   accent-color: var(--accent);
 }
 
 /* Disabled: greyed out and not clickable. The rules in rules.ts decide when this applies. */
 .field[data-disabled='true'] {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .field[data-disabled='true'] input,
@@ -115,42 +148,50 @@ select:disabled {
   background: var(--disabled-bg);
 }
 
-.preview-drivetrain {
-  max-width: 20rem;
-  margin: 1rem 0;
-  padding: 0.75rem;
-  border: 1px dashed var(--border);
-  border-radius: 0.5rem;
-}
-
-/* Cards: one per section, collapsed or open with the native <details>. */
+/* Form: every panel in one flow, split into columns. --columns is set by useFitToScreen. */
 .tune-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  column-count: var(--columns, 1);
+  column-gap: 1rem;
 }
 
-.card {
+/* Panels: flat, with a cut top-left corner. Never split across two columns. */
+.panel {
+  break-inside: avoid;
+  margin: 0 0 1rem;
+  padding: 0 0.75rem 0.5rem;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  clip-path: polygon(1rem 0, 100% 0, 100% 100%, 0 100%, 0 1rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.card summary {
-  min-height: 3rem;
-  padding: 0.75rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.card-body {
+/* Heading: an accent tick, the title in small caps, then a thin rule to the edge. */
+.panel h2 {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 0 1rem 1rem;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.625rem 0 0.375rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-/* Groups (Front, Rear, Wheel) are fieldsets with the browser's default box styling removed. */
+.panel h2::before {
+  content: '';
+  width: 0.25rem;
+  height: 0.9rem;
+  background: var(--accent);
+}
+
+.panel h2::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Groups (Wheel, or a Front/Rear that didn't pair) are fieldsets with the browser's box removed. */
 .group {
   margin: 0;
   padding: 0;
@@ -159,28 +200,202 @@ select:disabled {
 }
 
 .group legend {
-  margin-bottom: 0.5rem;
-  padding: 0;
+  margin: 0.25rem 0 0.125rem;
+  padding: 0 0 0 0.375rem;
   font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
-/* Fields: one column on phones, as many columns as fit from tablet width up. */
 .fields {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
-@media (min-width: 40rem) {
-  .fields {
-    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  }
+/* Front and Rear pairs: one label per row, then a Front box and a Rear box. */
+.pair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
 
-  main {
-    padding: 2rem;
-  }
+.pair-head,
+.pair-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: var(--row-height);
+}
+
+.pair-head {
+  min-height: 0;
+  padding-left: calc(0.375rem + 3px);
+}
+
+.pair-head span {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pair-label {
+  font-size: var(--label-size);
+  line-height: 1.15;
+}
+
+/* Tires over Suspension: a block that is never split across two columns. */
+.stack {
+  break-inside: avoid;
+}
+
+/* A read-only row: label on the left, the value on the right. */
+.readout-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 50%);
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--row-height);
+  padding-left: calc(0.375rem + 3px);
+}
+
+.readout-row span {
+  font-size: var(--label-size);
+  line-height: 1.15;
+}
+
+.readout-row strong {
+  font-size: var(--value-size);
+  line-height: 1.15;
+  text-align: right;
+}
+
+/* The car and drivetrain in General, with the way back to the first page. */
+.car-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* A car's picture (D11): the PNGs are transparent, so they sit on a field-coloured card. The small
+   variant is for the General panel, where height is scarce because the page must fit the screen. */
+.car-image {
+  display: flex;
+  justify-content: center;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 0.1875rem;
+}
+
+.car-image img {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  height: auto;
+}
+
+.car-image-small {
+  margin-bottom: 0.25rem;
+}
+
+.car-image-small img {
+  max-width: 8rem;
+}
+
+/* Buttons: a solid accent one for the main action, and a quiet outlined one. */
+.button {
+  min-height: 2.5rem;
+  padding: 0 1.25rem;
+  font: inherit;
+  font-size: var(--value-size);
+  color: #0b1620;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0.1875rem;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--focus-tint);
+  outline-offset: 2px;
+}
+
+.button-quiet {
+  min-height: 2rem;
+  margin: 0.25rem 0 0.125rem;
+  font-size: var(--label-size);
+  color: var(--text);
+  background: none;
+  border: 1px solid var(--border);
+}
+
+/* The first page: a narrow centred column with the picker in a panel. */
+.landing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 28rem;
+  margin: 2rem auto 0;
+}
+
+.landing h1 {
+  margin: 0.25rem 0 0;
+  font-size: 2.25rem;
+  line-height: 1.1;
+}
+
+.landing p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding-bottom: 1rem;
+}
+
+/* On the first page the control gets the wider share, so long model names fit. */
+.picker .field,
+.picker .readout-row {
+  grid-template-columns: 7rem minmax(0, 1fr);
+}
+
+/* Back to the car picker: plain text at the top left of the tuning page. */
+.back-button {
+  display: block;
+  min-height: 2rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  font: inherit;
+  font-size: var(--label-size);
+  color: var(--focus);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.back-button:focus-visible {
+  outline: 2px solid var(--focus-tint);
+  outline-offset: 2px;
 }
