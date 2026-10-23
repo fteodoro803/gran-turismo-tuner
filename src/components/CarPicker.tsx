@@ -8,7 +8,7 @@ import { CarImage } from './CarImage'
 // `image` is the picture's path under the site root, like `car-images/ford/gt-race-car-2018.png`.
 // It is optional so a car can have no picture, or a different file type, later (D11).
 export interface Car {
-  id: string
+  id: number
   manufacturer: string
   name: string
   drivetrain: Drivetrain
@@ -43,7 +43,7 @@ export function CarPicker({ cars, initial, onEnter }: Props) {
   const [maker, setMaker] = useState(() =>
     initial ? (initial.car ? initial.car.manufacturer : NOT_LISTED) : '',
   )
-  const [carId, setCarId] = useState(initial?.car?.id ?? '')
+  const [carId, setCarId] = useState<number | null>(initial?.car?.id ?? null)
   const [unlisted, setUnlisted] = useState<string>(initial && !initial.car ? initial.drivetrain : '')
 
   const makers = [...new Set(cars.map((c) => c.manufacturer))].sort()
@@ -83,7 +83,7 @@ export function CarPicker({ cars, initial, onEnter }: Props) {
             value={maker}
             onChange={(e) => {
               setMaker(e.target.value)
-              setCarId('')
+              setCarId(null)
             }}
           >
             <option value="">Choose…</option>
@@ -115,9 +115,9 @@ export function CarPicker({ cars, initial, onEnter }: Props) {
               <label htmlFor={ids.model}>Model</label>
               <select
                 id={ids.model}
-                value={carId}
+                value={carId ?? ''}
                 disabled={maker === ''}
-                onChange={(e) => setCarId(e.target.value)}
+                onChange={(e) => setCarId(e.target.value === '' ? null : Number(e.target.value))}
               >
                 <option value="">Choose…</option>
                 {models.map((c) => (

@@ -35,7 +35,7 @@ How code is written in this project. A decision in `DECISIONS.md` that creates a
 
 **Layout:** The tune model lives in `src/tune/`. `schema.ts` is the single source of truth: types, defaults and rules are derived from it, so add a field there and nowhere else (D6). Car data lives in `src/data/`.
 
-**Ids:** A car id, once it has appeared in a shared link, is never changed or reused (D8). If a car is renamed, add a new entry and keep the old one.
+**Ids:** A car id is a whole number (D15). Once it has appeared in a shared link, it is never changed or reused (D8). A new car takes the next number up, and gaps are never filled. If a car is renamed, add a new entry and keep the old one.
 
 **Assets:** Use relative paths only. The app is served from `/lab/<id>/` on the portfolio, so `base` stays `'./'` in `vite.config.ts`. Everything in `dist/` is public.
 

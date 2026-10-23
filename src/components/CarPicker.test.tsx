@@ -5,9 +5,9 @@ import { CarPicker } from './CarPicker'
 import type { Car } from './CarPicker'
 
 const CARS: Car[] = [
-  { id: 'a-one', manufacturer: 'Alpha', name: 'One', drivetrain: 'FR' },
-  { id: 'a-two', manufacturer: 'Alpha', name: 'Two', drivetrain: '4WD' },
-  { id: 'b-one', manufacturer: 'Beta', name: 'Uno', drivetrain: 'MR' },
+  { id: 1, manufacturer: 'Alpha', name: 'One', drivetrain: 'FR' },
+  { id: 2, manufacturer: 'Alpha', name: 'Two', drivetrain: '4WD' },
+  { id: 3, manufacturer: 'Beta', name: 'Uno', drivetrain: 'MR' },
 ]
 
 const enter = () => screen.getByRole('button', { name: 'Enter' })

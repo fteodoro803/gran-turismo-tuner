@@ -9,17 +9,17 @@ const PICTURE_PATHS = new Set(
 )
 
 describe('car list', () => {
-  it('has a unique, readable id for every car', () => {
+  it('has a unique, positive whole-number id for every car', () => {
     const ids = CARS.map((c) => c.id)
     expect(new Set(ids).size).toBe(ids.length)
-    for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+    for (const id of ids) expect(Number.isInteger(id) && id > 0, String(id)).toBe(true)
   })
 
   it('gives every car a manufacturer, a name and a known drivetrain', () => {
     for (const c of CARS) {
-      expect(c.manufacturer, c.id).not.toBe('')
-      expect(c.name, c.id).not.toBe('')
-      expect(DRIVETRAINS, c.id).toContain(c.drivetrain)
+      expect(c.manufacturer, String(c.id)).not.toBe('')
+      expect(c.name, String(c.id)).not.toBe('')
+      expect(DRIVETRAINS, String(c.id)).toContain(c.drivetrain)
     }
   })
 
