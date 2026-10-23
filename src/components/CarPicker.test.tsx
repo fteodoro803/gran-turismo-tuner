@@ -23,13 +23,10 @@ describe('CarPicker', () => {
     expect(enter()).toBeEnabled()
   })
 
-  it('shows a big question mark until a car is chosen', async () => {
-    const user = userEvent.setup()
+  it('shows no question mark while no car is chosen (D20)', () => {
     render(<CarPicker cars={CARS} onEnter={vi.fn()} />)
-    expect(screen.getByRole('img', { name: 'No car chosen' })).toBeInTheDocument()
-    await user.selectOptions(screen.getByLabelText('Manufacturer'), 'Alpha')
-    await user.selectOptions(screen.getByLabelText('Model'), 'One')
     expect(screen.queryByRole('img', { name: 'No car chosen' })).not.toBeInTheDocument()
+    expect(screen.queryByText('?')).not.toBeInTheDocument()
   })
 
   it('lists only the models of the chosen manufacturer, and shows the drivetrain', async () => {

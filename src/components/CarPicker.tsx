@@ -103,7 +103,7 @@ export function CarPicker({ cars, initial, notice, onEnter }: Props) {
         {car ? (
           <CarImage key={car.id} image={car.image} fallback={<CarPlaceholder />} />
         ) : (
-          <CarPlaceholder unknown />
+          <CarPlaceholder />
         )}
         <div className="readout-row">
           <span>Drivetrain</span>

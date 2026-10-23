@@ -319,18 +319,8 @@ select:disabled {
   max-width: 14rem;
 }
 
-/* Buttons: a solid accent one for the main action, and a quiet outlined one. */
-.button {
-/* The question mark that stands in while no car is chosen, in the border colour on the card. */
-.car-placeholder span {
-  align-self: center;
-  font-size: 8rem;
-  line-height: 1;
-  color: var(--border);
-}
-
-/* On the first page the picture area has one fixed height, whatever fills it (a picture, the
-   question mark, or nothing loaded yet), so the Enter button below never moves. */
+/* On the first page the picture area has one fixed height, whatever fills it (a picture, or an
+   empty card), so the Enter button below never moves. */
 .picker .car-image {
   align-items: center;
   height: 11rem;
@@ -345,6 +335,8 @@ select:disabled {
   max-height: 100%;
 }
 
+/* Buttons: a solid accent one for the main action, and a quiet outlined one. */
+.button {
   min-height: 2.5rem;
   padding: 0 1.25rem;
   font: inherit;
