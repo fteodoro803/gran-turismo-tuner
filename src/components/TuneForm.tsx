@@ -3,6 +3,7 @@ import { SECTIONS } from '../tune/schema'
 import type { SectionDef } from '../tune/schema'
 import type { Tune } from '../tune/types'
 import { CarSummary } from './CarSummary'
+import { CopyLinkButton } from './CopyLinkButton'
 import type { CarChoice } from './CarPicker'
 import type { ChangeHandler } from './FieldInput'
 import { SectionCard } from './SectionCard'
@@ -42,10 +43,13 @@ export function TuneForm({ tune, choice, onChange, onChangeCar }: Props) {
 
   return (
     <>
-      {/* ===== Back to the car picker ===== */}
-      <button type="button" className="back-button" onClick={onChangeCar}>
-        ← Back
-      </button>
+      {/* ===== Back to the car picker, and the share link ===== */}
+      <div className="top-bar">
+        <button type="button" className="back-button" onClick={onChangeCar}>
+          ← Back
+        </button>
+        <CopyLinkButton tune={tune} car={choice.car} />
+      </div>
 
       {/* ===== Panels ===== */}
       <form ref={formRef} className="tune-form" onSubmit={(e) => e.preventDefault()}>

@@ -23,6 +23,8 @@ interface Props {
   cars: readonly Car[]
   // The earlier choice, so "Change car" opens the picker where you left it.
   initial?: CarChoice
+  // A message shown under the disclaimer, such as a share link that could not be opened.
+  notice?: string
   onEnter: (choice: CarChoice) => void
 }
 
@@ -30,7 +32,7 @@ interface Props {
 //
 // Manufacturer comes first, then the models of that make. The Enter button stays disabled until
 // a car is chosen.
-export function CarPicker({ cars, initial, onEnter }: Props) {
+export function CarPicker({ cars, initial, notice, onEnter }: Props) {
   const ids = { maker: useId(), model: useId() }
   const [maker, setMaker] = useState(initial?.car.manufacturer ?? '')
   const [carId, setCarId] = useState<number | null>(initial?.car.id ?? null)
@@ -47,6 +49,7 @@ export function CarPicker({ cars, initial, onEnter }: Props) {
       <a href="../">← Back to Lab</a>
       <h1>GT7 Tune Sharing</h1>
       <p>Fan project, not affiliated with Sony Interactive Entertainment or Polyphony Digital.</p>
+      {notice && <p role="alert" className="notice">{notice}</p>}
 
       <form
         className="panel picker"
