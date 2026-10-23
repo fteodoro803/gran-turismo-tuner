@@ -7,6 +7,9 @@ import { CopyLinkButton } from './CopyLinkButton'
 import type { CarChoice } from './CarPicker'
 import type { ChangeHandler } from './FieldInput'
 import { SectionCard } from './SectionCard'
+import { UnitSelects } from './UnitSelects'
+import type { Units } from '../tune/units'
+import type { UnitFamily } from '../tune/schema'
 import { useFitToScreen } from './useFitToScreen'
 
 interface Props {
@@ -14,6 +17,10 @@ interface Props {
   choice: CarChoice
   onChange: ChangeHandler
   onChangeCar: () => void
+  // The unit the tune's numbers are kept in, the unit shown, and the way to change the shown one (#14).
+  storedUnits: Units
+  shownUnits: Units
+  onChangeUnit: (family: UnitFamily, unit: string) => void
 }
 
 // Sections kept in one block, so a column break never separates them (#20).
@@ -26,7 +33,7 @@ const isInLaterPosition = (id: string) => STACKS.some((stack) => stack.indexOf(i
 //
 // The panels flow down through CSS columns (never split across two). How many columns, and the
 // size of everything, is chosen by useFitToScreen so the page doesn't scroll on a tablet or larger.
-export function TuneForm({ tune, choice, onChange, onChangeCar }: Props) {
+export function TuneForm({ tune, choice, onChange, onChangeCar, storedUnits, shownUnits, onChangeUnit }: Props) {
   const formRef = useRef<HTMLFormElement>(null)
   useFitToScreen(formRef)
 
@@ -38,6 +45,8 @@ export function TuneForm({ tune, choice, onChange, onChangeCar }: Props) {
       drivetrain={choice.car.drivetrain}
       onChange={onChange}
       extra={section.id === 'general' ? <CarSummary choice={choice} onChangeCar={onChangeCar} /> : undefined}
+      footer={section.id === 'general' ? <UnitSelects shown={shownUnits} onChange={onChangeUnit} /> : undefined}
+      units={{ stored: storedUnits, shown: shownUnits }}
     />
   )
 
@@ -48,7 +57,7 @@ export function TuneForm({ tune, choice, onChange, onChangeCar }: Props) {
         <button type="button" className="back-button" onClick={onChangeCar}>
           ← Back
         </button>
-        <CopyLinkButton tune={tune} car={choice.car} />
+        <CopyLinkButton tune={tune} car={choice.car} units={storedUnits} />
       </div>
 
       {/* ===== Panels ===== */}

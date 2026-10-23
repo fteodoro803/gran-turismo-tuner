@@ -2,6 +2,8 @@ import { useId } from 'react'
 import { isEnabled } from '../tune/rules'
 import type { FieldDef } from '../tune/schema'
 import type { Drivetrain, FieldKey, Tune } from '../tune/types'
+import { convertField, isUnitField } from '../tune/units'
+import type { Units } from '../tune/units'
 import { NumberInput } from './NumberInput'
 
 export type ChangeHandler = (key: FieldKey, value: unknown) => void
@@ -14,6 +16,9 @@ interface Props {
   // A paired Front/Rear cell: the row shows the label once, so this one is hidden from sight but
   // stays in the page for screen readers and for tests that look fields up by label.
   bare?: boolean
+  // The unit the tune's numbers are kept in, and the one shown. A number with a unit family is
+  // converted between them for display (#14). Without it, numbers show as they are.
+  units?: { stored: Units; shown: Units }
 }
 
 // One labelled control for a schema field, chosen by the field's kind and greyed out by the rules.
@@ -21,7 +26,7 @@ interface Props {
 // The tune is read through a loose Record because the schema's keys are only known as a union
 // type here; the value's real type is guaranteed by `field.kind`, which we switch on.
 // Torque split ('ratio') and gear lists ('gears') render nothing until issue #13 adds them.
-export function FieldInput({ field, tune, drivetrain, onChange, bare }: Props) {
+export function FieldInput({ field, tune, drivetrain, onChange, bare, units }: Props) {
   const id = useId()
   const labelClass = bare ? 'sr-only' : undefined
   const key = field.key as FieldKey
@@ -65,19 +70,23 @@ export function FieldInput({ field, tune, drivetrain, onChange, bare }: Props) {
       )
 
     case 'int':
-    case 'decimal':
+    case 'decimal': {
+      // The stored number moved into the shown unit. What the user types is already in that unit.
+      const shown =
+        typeof value === 'number' ? (isUnitField(field) && units ? convertField(field, value, units.stored, units.shown) : value) : undefined
       return (
         <div className="field" data-disabled={!enabled}>
           <label htmlFor={id} className={labelClass}>{field.label}</label>
           <NumberInput
             id={id}
             field={field}
-            value={typeof value === 'number' ? value : undefined}
+            value={shown}
             disabled={!enabled}
             onChange={(v) => onChange(key, v)}
           />
         </div>
       )
+    }
 
     case 'ratio':
     case 'gears':

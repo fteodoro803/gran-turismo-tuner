@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { FieldDef, SectionDef } from '../tune/schema'
 import type { Drivetrain, Tune } from '../tune/types'
+import type { Units } from '../tune/units'
 import { FieldInput } from './FieldInput'
 import type { ChangeHandler } from './FieldInput'
 
@@ -11,6 +12,9 @@ interface Props {
   onChange: ChangeHandler
   // Extra content under the heading, e.g. the car and drivetrain in General (#12).
   extra?: ReactNode
+  // Extra content under the fields, e.g. the unit choices in General (#14).
+  footer?: ReactNode
+  units?: { stored: Units; shown: Units }
 }
 
 interface FieldGroup {
@@ -63,7 +67,7 @@ function toBlocks(groups: FieldGroup[]): Block[] {
 // A flat panel for one tuning section, built from the schema.
 //
 // Always open, like the game's sheets (#20): every section is on one page.
-export function SectionCard({ section, tune, drivetrain, onChange, extra }: Props) {
+export function SectionCard({ section, tune, drivetrain, onChange, extra, footer, units }: Props) {
   const input = (field: FieldDef, bare = false) => (
     <FieldInput
       key={field.key}
@@ -72,6 +76,7 @@ export function SectionCard({ section, tune, drivetrain, onChange, extra }: Prop
       drivetrain={drivetrain}
       onChange={onChange}
       bare={bare}
+      units={units}
     />
   )
 
@@ -111,6 +116,7 @@ export function SectionCard({ section, tune, drivetrain, onChange, extra }: Prop
           </fieldset>
         )
       })}
+      {footer}
     </div>
   )
 }
