@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import type { Drivetrain } from '../tune/types'
 import { CarImage } from './CarImage'
+import { CarPlaceholder } from './CarPlaceholder'
 
 // The shape of one car in src/data/cars.json (#4).
 //
@@ -97,15 +98,17 @@ export function CarPicker({ cars, initial, notice, onEnter }: Props) {
             ))}
           </select>
         </div>
-        {car && (
-          <>
-            <CarImage key={car.id} image={car.image} />
-            <div className="readout-row">
-              <span>Drivetrain</span>
-              <strong>{car.drivetrain}</strong>
-            </div>
-          </>
+
+        {/* ===== Picture and drivetrain: always drawn, so Enter stays put as the choice changes ===== */}
+        {car ? (
+          <CarImage key={car.id} image={car.image} fallback={<CarPlaceholder />} />
+        ) : (
+          <CarPlaceholder unknown />
         )}
+        <div className="readout-row">
+          <span>Drivetrain</span>
+          <strong>{car ? car.drivetrain : '—'}</strong>
+        </div>
 
         <button type="submit" className="button" disabled={!choice}>
           Enter
