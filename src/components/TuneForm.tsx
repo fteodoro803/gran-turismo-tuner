@@ -34,7 +34,7 @@ export function TuneForm({ tune, choice, onChange, onChangeCar }: Props) {
       key={section.id}
       section={section}
       tune={tune}
-      drivetrain={choice.drivetrain}
+      drivetrain={choice.car.drivetrain}
       onChange={onChange}
       extra={section.id === 'general' ? <CarSummary choice={choice} onChangeCar={onChangeCar} /> : undefined}
     />

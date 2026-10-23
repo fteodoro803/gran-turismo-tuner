@@ -2,14 +2,24 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
+import { CARS } from './data/cars'
 import { SECTIONS } from './tune/schema'
+import type { Drivetrain } from './tune/types'
 
 type User = ReturnType<typeof userEvent.setup>
 
-// Gets past the first page the way a person with an unlisted car would.
-async function enter(user: User, drivetrain: string) {
-  await user.selectOptions(screen.getByLabelText('Manufacturer'), "My car isn't listed")
-  await user.selectOptions(screen.getByLabelText('Drivetrain'), drivetrain)
+// The first real car with the given drivetrain.
+const carWith = (drivetrain: Drivetrain) => CARS.find((c) => c.drivetrain === drivetrain)!
+
+// Picks a car in the picker, without pressing Enter.
+async function pick(user: User, car: (typeof CARS)[number]) {
+  await user.selectOptions(screen.getByLabelText('Manufacturer'), car.manufacturer)
+  await user.selectOptions(screen.getByLabelText('Model'), String(car.id))
+}
+
+// Gets past the first page with a car that has the given drivetrain.
+async function enter(user: User, drivetrain: Drivetrain) {
+  await pick(user, carWith(drivetrain))
   await user.click(screen.getByRole('button', { name: 'Enter' }))
 }
 
@@ -41,8 +51,8 @@ describe('App', () => {
 
     // Change car goes back to the picker, which remembers the last choice.
     await user.click(screen.getByRole('button', { name: 'Change car' }))
-    expect(screen.getByLabelText('Drivetrain')).toHaveValue('FR')
-    await user.selectOptions(screen.getByLabelText('Drivetrain'), '4WD')
+    expect(screen.getByLabelText('Manufacturer')).toHaveValue(carWith('FR').manufacturer)
+    await pick(user, carWith('4WD'))
     await user.click(screen.getByRole('button', { name: 'Enter' }))
     expect(frontInitial()).toBeEnabled()
   })
@@ -53,7 +63,8 @@ describe('App', () => {
     await enter(user, '4WD')
     await user.click(screen.getByRole('button', { name: '← Back' }))
     expect(screen.getByRole('heading', { level: 1, name: 'GT7 Tune Sharing' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Drivetrain')).toHaveValue('4WD')
+    expect(screen.getByLabelText('Manufacturer')).toHaveValue(carWith('4WD').manufacturer)
+    expect(screen.getByLabelText('Model')).toHaveValue(String(carWith('4WD').id))
   })
 
   it('keeps the tune when you change the car', async () => {
