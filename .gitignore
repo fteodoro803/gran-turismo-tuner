@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Sony car pictures for the preview (D11). Never committed.
+public/car-images/

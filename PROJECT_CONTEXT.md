@@ -9,7 +9,7 @@ A static web app for sharing Gran Turismo 7 tunes as links. You pick a car, fill
 - Free hobby tool, used by a few people in GT7 communities. Not affiliated with Sony or Polyphony Digital.
 - No backend: the tune lives in the link, after the `#`.
 - Runs as a Lab tool on the owner's portfolio (`fteodoro803/portfolio`), served from `/lab/<id>/`.
-- Text only for now: no car photos and no manufacturer logos (D1).
+- Text only for release: no car photos and no manufacturer logos (D1). Temporarily, a local preview shows Sony's car pictures from a git-ignored folder (D11).
 
 **Stack:** TypeScript, React 19, Vite, Vitest, Testing Library, oxlint. Plain static output in `dist/`.
 
@@ -17,8 +17,8 @@ A static web app for sharing Gran Turismo 7 tunes as links. You pick a car, fill
 
 Started in October 2026 from the idea that GT7 tune sharing by screenshot and spreadsheet is slow to update and hard to search. The first release covers a car picker, the 17 tuning sections, unit conversion and share links. The build order is D0 to D10:
 
-- **Done:** D1 (scaffold), D2 (tune data model) and D6 (tuning form, PR #19).
-- **Next:** D3 (car data from screenshots), D4 (link codec), D5 (car picker), D7 (special inputs), D8 (units), D9 (view and share), D10 (ship to the portfolio), plus a design pass (#20). Each is an issue on GitHub.
+- **Done:** D1 (scaffold), D2 (tune data model) and D6 (tuning form, PR #19). The design pass (#20) adds a first page with the title, disclaimer and a car picker, and a one-page tuning form that scales to fit the screen. The picker runs on the full 580-car list in `src/data/cars.json` (#4), with each car's picture shown from the git-ignored `public/car-images/` (D11).
+- **Next:** D3 (car data from screenshots), D4 (link codec), D5 (car picker), D7 (special inputs), D8 (units), D9 (view and share), D10 (ship to the portfolio), Each is an issue on GitHub. D5 (#12) is mostly done: the picker UI and the car list (#4) exist, and share links (#5) do not.
 
 Portfolio rules the build must follow: relative asset paths (`base: './'`), an `index.html` in the output folder, a "← Back to Lab" link, no dependency on the portfolio's CSS, and no backend. The portfolio does not rebuild when this repo changes, so run its deploy workflow after each release.
 
@@ -32,7 +32,7 @@ Ideas that are wanted or plausible but have no design and no owner yet. Promote 
 
 ### Car thumbnails
 
-Optional car images for the picker and view. Deferred because the images are Sony's. If added, they would come from the owner's own game screenshots, loaded through one image function so they can be swapped or removed.
+Car images for the picker and view. For release they are deferred because the images are Sony's, and would come from the owner's own game screenshots. Today a temporary preview shows Sony's pictures from the git-ignored `public/car-images/` (D11), each named by the car's `image` field in `cars.json` and loaded through `src/components/CarImage.tsx` and `src/data/car-images.ts`, so they can be swapped or removed in one place.
 
 ### Public tune gallery or search
 

@@ -11,6 +11,9 @@ interface Props {
   tune: Tune
   drivetrain?: Drivetrain
   onChange: ChangeHandler
+  // A paired Front/Rear cell: the row shows the label once, so this one is hidden from sight but
+  // stays in the page for screen readers and for tests that look fields up by label.
+  bare?: boolean
 }
 
 // One labelled control for a schema field, chosen by the field's kind and greyed out by the rules.
@@ -18,8 +21,9 @@ interface Props {
 // The tune is read through a loose Record because the schema's keys are only known as a union
 // type here; the value's real type is guaranteed by `field.kind`, which we switch on.
 // Torque split ('ratio') and gear lists ('gears') render nothing until issue #13 adds them.
-export function FieldInput({ field, tune, drivetrain, onChange }: Props) {
+export function FieldInput({ field, tune, drivetrain, onChange, bare }: Props) {
   const id = useId()
+  const labelClass = bare ? 'sr-only' : undefined
   const key = field.key as FieldKey
   const value = (tune as Record<string, unknown>)[field.key]
   const enabled = isEnabled(key, tune, drivetrain)
@@ -35,14 +39,14 @@ export function FieldInput({ field, tune, drivetrain, onChange }: Props) {
             disabled={!enabled}
             onChange={(e) => onChange(key, e.target.checked)}
           />
-          <label htmlFor={id}>{field.label}</label>
+          <label htmlFor={id} className={labelClass}>{field.label}</label>
         </div>
       )
 
     case 'enum':
       return (
         <div className="field" data-disabled={!enabled}>
-          <label htmlFor={id}>{field.label}</label>
+          <label htmlFor={id} className={labelClass}>{field.label}</label>
           {/* A missing enum means its default, which is the first option (see defaults.ts). */}
           <select
             id={id}
@@ -63,7 +67,7 @@ export function FieldInput({ field, tune, drivetrain, onChange }: Props) {
     case 'decimal':
       return (
         <div className="field" data-disabled={!enabled}>
-          <label htmlFor={id}>{field.label}</label>
+          <label htmlFor={id} className={labelClass}>{field.label}</label>
           <NumberInput
             id={id}
             field={field}
