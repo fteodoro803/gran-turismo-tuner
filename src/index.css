@@ -316,7 +316,7 @@ select:disabled {
 }
 
 .car-image-small img {
-  max-width: 8rem;
+  max-width: 14rem;
 }
 
 /* Buttons: a solid accent one for the main action, and a quiet outlined one. */
