@@ -1,5 +1,4 @@
 import { useId, useState } from 'react'
-import { DRIVETRAINS } from '../tune/schema'
 import type { Drivetrain } from '../tune/types'
 import { CarImage } from './CarImage'
 
@@ -15,56 +14,42 @@ export interface Car {
   image?: string
 }
 
-// What the first page hands to the tuning page: the car (none if it isn't listed) and its drivetrain.
+// What the first page hands to the tuning page. A tune always has a car; its drivetrain is `car.drivetrain`.
 export interface CarChoice {
-  car?: Car
-  drivetrain: Drivetrain
+  car: Car
 }
 
 interface Props {
   cars: readonly Car[]
   // The earlier choice, so "Change car" opens the picker where you left it.
   initial?: CarChoice
+  // A message shown under the disclaimer, such as a share link that could not be opened.
+  notice?: string
   onEnter: (choice: CarChoice) => void
 }
 
-// A manufacturer value that can't clash with a real name.
-const NOT_LISTED = '__not-listed__'
-
-const isDrivetrain = (s: string): s is Drivetrain => (DRIVETRAINS as readonly string[]).includes(s)
-
 // The first page: title, disclaimer, and the car picker that opens the tuning page (#12).
 //
-// Manufacturer comes first, then the models of that make. "My car isn't listed" swaps the model
-// for a drivetrain dropdown, so the app stays usable for a car missing from the list. The Enter
-// button stays disabled until there is something to enter with.
-export function CarPicker({ cars, initial, onEnter }: Props) {
-  const ids = { maker: useId(), model: useId(), drivetrain: useId() }
-  const [maker, setMaker] = useState(() =>
-    initial ? (initial.car ? initial.car.manufacturer : NOT_LISTED) : '',
-  )
-  const [carId, setCarId] = useState<number | null>(initial?.car?.id ?? null)
-  const [unlisted, setUnlisted] = useState<string>(initial && !initial.car ? initial.drivetrain : '')
+// Manufacturer comes first, then the models of that make. The Enter button stays disabled until
+// a car is chosen.
+export function CarPicker({ cars, initial, notice, onEnter }: Props) {
+  const ids = { maker: useId(), model: useId() }
+  const [maker, setMaker] = useState(initial?.car.manufacturer ?? '')
+  const [carId, setCarId] = useState<number | null>(initial?.car.id ?? null)
 
   const makers = [...new Set(cars.map((c) => c.manufacturer))].sort()
   const models = cars.filter((c) => c.manufacturer === maker)
   const car = models.find((c) => c.id === carId)
 
   // What Enter would send, or null while the picker isn't complete.
-  const choice: CarChoice | null =
-    maker === NOT_LISTED
-      ? isDrivetrain(unlisted)
-        ? { drivetrain: unlisted }
-        : null
-      : car
-        ? { car, drivetrain: car.drivetrain }
-        : null
+  const choice: CarChoice | null = car ? { car } : null
 
   return (
     <div className="landing">
       <a href="../">← Back to Lab</a>
       <h1>GT7 Tune Sharing</h1>
       <p>Fan project, not affiliated with Sony Interactive Entertainment or Polyphony Digital.</p>
+      {notice && <p role="alert" className="notice">{notice}</p>}
 
       <form
         className="panel picker"
@@ -92,50 +77,33 @@ export function CarPicker({ cars, initial, onEnter }: Props) {
                 {m}
               </option>
             ))}
-            <option value={NOT_LISTED}>My car isn't listed</option>
           </select>
         </div>
 
-        {/* ===== Model, or a drivetrain when the car isn't listed ===== */}
-        {maker === NOT_LISTED ? (
-          <div className="field">
-            <label htmlFor={ids.drivetrain}>Drivetrain</label>
-            <select id={ids.drivetrain} value={unlisted} onChange={(e) => setUnlisted(e.target.value)}>
-              <option value="">Choose…</option>
-              {DRIVETRAINS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
+        {/* ===== Model ===== */}
+        <div className="field">
+          <label htmlFor={ids.model}>Model</label>
+          <select
+            id={ids.model}
+            value={carId ?? ''}
+            disabled={maker === ''}
+            onChange={(e) => setCarId(e.target.value === '' ? null : Number(e.target.value))}
+          >
+            <option value="">Choose…</option>
+            {models.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {car && (
           <>
-            <div className="field">
-              <label htmlFor={ids.model}>Model</label>
-              <select
-                id={ids.model}
-                value={carId ?? ''}
-                disabled={maker === ''}
-                onChange={(e) => setCarId(e.target.value === '' ? null : Number(e.target.value))}
-              >
-                <option value="">Choose…</option>
-                {models.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            <CarImage key={car.id} image={car.image} />
+            <div className="readout-row">
+              <span>Drivetrain</span>
+              <strong>{car.drivetrain}</strong>
             </div>
-            {car && (
-              <>
-                <CarImage key={car.id} image={car.image} />
-                <div className="readout-row">
-                  <span>Drivetrain</span>
-                  <strong>{car.drivetrain}</strong>
-                </div>
-              </>
-            )}
           </>
         )}
 
