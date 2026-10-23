@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
@@ -165,5 +165,32 @@ describe('share links', () => {
     const decoded = decode(copied.split('#')[1])
     expect(decoded?.car).toBe(car)
     expect(decoded?.tune.suspension).toBe('Sports Suspension')
+  })
+})
+
+describe('unit selectors in General (#14)', () => {
+  it('converts the shown number when the unit changes, and keeps the choice', async () => {
+    localStorage.clear()
+    const user = userEvent.setup()
+    const car = CARS[0]
+    window.location.hash = encode({ car, tune: withDefaults({ maxPower: 450 }) })
+    render(<App />)
+    await user.click(within(screen.getByRole('group', { name: 'Power unit' })).getByRole('button', { name: 'PS' }))
+    expect(screen.getByLabelText('Max Power')).toHaveValue('456')
+    expect(localStorage.getItem('gt-tuner-units')).toContain('PS')
+  })
+
+  it('keeps the unit a number was typed in when the link is copied', async () => {
+    localStorage.clear()
+    const user = userEvent.setup()
+    const car = CARS[0]
+    window.location.hash = encode({ car, tune: withDefaults({ maxPower: 450 }) })
+    render(<App />)
+    await user.click(within(screen.getByRole('group', { name: 'Power unit' })).getByRole('button', { name: 'PS' }))
+    await user.clear(screen.getByLabelText('Max Power'))
+    await user.type(screen.getByLabelText('Max Power'), '500{Enter}')
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+    const copied = await navigator.clipboard.readText()
+    expect(decode(copied.split('#')[1])?.units.power).toBe('PS')
   })
 })

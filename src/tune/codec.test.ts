@@ -36,7 +36,7 @@ describe('encode and decode', () => {
   })
 
   it('leaves defaults out of the link', () => {
-    expect(encode({ tune: defaultTune(), car: fr })).toBe(`1,${fr.id},0`)
+    expect(encode({ tune: defaultTune(), car: fr })).toBe(`2,${fr.id},0`)
   })
 
   it('writes enums by option position, numbers as they are and gears as a list', () => {
@@ -96,6 +96,29 @@ describe('a saved link', () => {
   })
 })
 
+describe('units in a link', () => {
+  const typed = { power: 'PS', torque: 'Nm', weight: 'lbs' } as const
+
+  it('round-trips the units the numbers were typed in', () => {
+    const link = encode({ tune: sample, car: fr, units: typed })
+    expect(link.split(',')).toContain('u:211')
+    expect(decode(link)?.units).toEqual(typed)
+  })
+
+  it('leaves the units out when they are all the defaults', () => {
+    expect(encode({ tune: sample, car: fr }).split(',').some((p) => p.startsWith('u:'))).toBe(false)
+    expect(decode(encode({ tune: sample, car: fr }))?.units).toEqual({ power: 'HP', torque: 'ft-lb', weight: 'kg' })
+  })
+
+  it('falls back to the default for a unit it cannot read', () => {
+    expect(decode(`2,${fr.id},0,u:9x1`)?.units).toEqual({ power: 'HP', torque: 'ft-lb', weight: 'lbs' })
+  })
+
+  it('opens a version 1 link with the default units', () => {
+    expect(decode(`1,${fr.id},0,${n('maxPower')}:400`)?.units).toEqual({ power: 'HP', torque: 'ft-lb', weight: 'kg' })
+  })
+})
+
 describe('decode on a bad link', () => {
   it('returns undefined for text that is not a link', () => {
     for (const text of ['', 'not a link', '%%%', '1', '1,', '1,1', '1,1,', 'eyJ2IjoxfQ']) {
@@ -104,7 +127,7 @@ describe('decode on a bad link', () => {
   })
 
   it('returns undefined for a version it does not know', () => {
-    expect(decode(`2,${fr.id},0`)).toBeUndefined()
+    expect(decode(`3,${fr.id},0`)).toBeUndefined()
     expect(decode(`${fr.id},0`)).toBeUndefined()
   })
 

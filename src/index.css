@@ -1,5 +1,6 @@
 /* Theme tokens: one dark palette, like the game's settings sheets (#20). Every colour below uses these.
-   Slate: mid blue-grey with a sky-blue accent. Rajdhani is loaded in main.tsx at weight 700 only,
+   Slate: mid blue-grey with a sky-blue accent. Rajdhani is loaded in main.tsx at weights 500 and 600 only: labels are 500 in the muted colour,
+   values and buttons 600, and
    because its lighter weights read too thin at small sizes.
 
    Every size is in rem. useFitToScreen changes the root font size to make the whole page fit the
@@ -15,12 +16,13 @@
   --focus: #5cc4ff;
   --focus-tint: rgba(92, 196, 255, 0.14);
   --disabled-bg: #262b33;
+  --placeholder: #8993a1;
   --label-size: 1.1875rem;
   --value-size: 1.25rem;
   --row-height: 2.25rem;
   color-scheme: dark;
   font: 16px/1.5 'Rajdhani', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 * {
@@ -66,14 +68,15 @@ main {
 
 .field label {
   font-size: var(--label-size);
+  font-weight: 500;
   line-height: 1.15;
-  color: var(--text);
+  color: var(--muted);
 }
 
 input[type='text'],
 select {
   width: 100%;
-  min-height: var(--row-height);
+  min-height: calc(var(--row-height) - 2px);
   padding: 0.125rem 0.5rem;
   font: inherit;
   font-size: var(--value-size);
@@ -81,6 +84,11 @@ select {
   background: var(--field);
   border: 1px solid var(--border);
   border-radius: 0.1875rem;
+}
+
+input::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
 }
 
 input[type='text'] {
@@ -123,8 +131,9 @@ select:focus-visible {
   flex-direction: row-reverse;
   justify-content: space-between;
   font-size: var(--label-size);
+  font-weight: 500;
   line-height: 1.15;
-  color: var(--text);
+  color: var(--muted);
   cursor: pointer;
 }
 
@@ -133,12 +142,28 @@ select:focus-visible {
   border-left-color: var(--focus);
 }
 
+/* A square checkbox drawn by hand: field-coloured when off, accent with a dark tick when on. */
 .field-toggle input {
   flex: none;
-  width: 1.25rem;
-  height: 1.25rem;
+  appearance: none;
+  width: 1.375rem;
+  height: 1.375rem;
   margin: 0 0.25rem;
-  accent-color: var(--accent);
+  background: var(--field) center / 0.875rem no-repeat;
+  border: 1px solid var(--border);
+  border-radius: 0.1875rem;
+}
+
+.field-toggle input:checked {
+  background-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%230b1620' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 7.5l3 3 6-7'/%3E%3C/svg%3E");
+  border-color: var(--accent);
+}
+
+.field-toggle input:focus-visible {
+  outline: 2px solid var(--focus-tint);
+  outline-offset: 2px;
+  border-color: var(--focus);
 }
 
 /* Disabled: greyed out and not clickable. The rules in rules.ts decide when this applies. */
@@ -255,7 +280,9 @@ select:disabled {
 
 .pair-label {
   font-size: var(--label-size);
+  font-weight: 500;
   line-height: 1.15;
+  color: var(--muted);
 }
 
 /* Tires over Suspension: a block that is never split across two columns. */
@@ -275,7 +302,9 @@ select:disabled {
 
 .readout-row span {
   font-size: var(--label-size);
+  font-weight: 500;
   line-height: 1.15;
+  color: var(--muted);
 }
 
 .readout-row strong {
@@ -374,6 +403,41 @@ select:disabled {
 .button-quiet:hover:not(:disabled) {
   background: var(--focus-tint);
   border-color: var(--focus);
+}
+
+/* Unit choices as plain text: muted, with the chosen one in the accent colour and underlined. */
+.field > span {
+  font-size: var(--label-size);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--muted);
+}
+
+.unit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.unit-buttons button {
+  min-height: 2rem;
+  padding: 0 0.125rem;
+  font: inherit;
+  font-size: 1.125rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.unit-buttons button:hover {
+  color: var(--text);
+}
+
+.unit-buttons button[aria-pressed='true'] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 /* The first page: a narrow centred column with the picker in a panel. */

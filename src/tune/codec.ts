@@ -2,6 +2,9 @@
 //
 // Link format (D2), plain text with no JSON and no base64, parts separated by commas:
 //   <version>,<car id>,<toggles>,<n>:<value>,<n>:<value>,...
+// - Version 2 adds `u:<power><torque><weight>`, the position of the unit each number was typed in
+//   (#14). It is left out when all three are the defaults. Version 1 links have no units and open
+//   with the defaults.
 // - Each field is named by its permanent number `n` from the schema, so renaming or reordering
 //   a field never changes what an old link means.
 // - Toggles that are on share one number: bit (n - 1) is set for each, written in base 36.
@@ -15,14 +18,19 @@ import { normaliseTune } from './rules'
 import { FIELDS } from './schema'
 import type { FieldDef } from './schema'
 import type { GearSet, Tune } from './types'
+import { DEFAULT_UNITS, packUnits, parseUnits } from './units'
+import type { Units } from './units'
 
 export interface LinkContents {
   tune: Tune
   car: Car
+  units: Units
 }
 
-// Bumped when the format changes in a way old decoders can't read.
-const VERSION = 1
+// Bumped when the format changes in a way old decoders can't read. Older versions still open.
+const VERSION = 2
+const READABLE_VERSIONS = ['1', '2']
+const UNITS_KEY = 'u'
 
 const FIELD_BY_N = new Map<number, FieldDef>(FIELDS.map((f) => [f.n, f]))
 const CAR_BY_ID = new Map<number, Car>(CARS.map((c) => [c.id, c]))
@@ -88,7 +96,8 @@ function unpackValue(field: FieldDef, text: string): unknown {
 // 1. Clean the tune for the car's drivetrain, so a value for a locked field is not shared (D6).
 // 2. Set one bit for each toggle that is on.
 // 3. Write each other field that is set and not at its default as `n:value`.
-export function encode({ tune, car }: LinkContents): string {
+// 4. Write the units the numbers were typed in, unless they are all the defaults.
+export function encode({ tune, car, units = DEFAULT_UNITS }: Omit<LinkContents, 'units'> & { units?: Units }): string {
   const cleaned = normaliseTune(tune, car.drivetrain) as Record<string, unknown>
   let toggles = 0n
   const pairs: string[] = []
@@ -102,6 +111,8 @@ export function encode({ tune, car }: LinkContents): string {
     const text = packValue(field, value)
     if (text !== undefined) pairs.push(`${field.n}:${text}`)
   }
+  const unitsText = packUnits(units)
+  if (unitsText !== undefined) pairs.push(`${UNITS_KEY}:${unitsText}`)
   return [VERSION, car.id, toggles.toString(36), ...pairs].join(',')
 }
 
@@ -112,7 +123,7 @@ export function encode({ tune, car }: LinkContents): string {
 // rest still opens.
 export function decode(text: string): LinkContents | undefined {
   const [version, carId, togglesText, ...pairs] = text.split(',')
-  if (version !== String(VERSION) || !WHOLE.test(carId ?? '')) return undefined
+  if (!READABLE_VERSIONS.includes(version) || !WHOLE.test(carId ?? '')) return undefined
   const car = CAR_BY_ID.get(Number(carId))
   const toggles = parseBase36(togglesText ?? '')
   if (!car || toggles === undefined) return undefined
@@ -121,12 +132,17 @@ export function decode(text: string): LinkContents | undefined {
   for (const field of FIELDS) {
     if (field.kind === 'toggle' && (toggles & bit(field)) !== 0n) raw[field.key] = true
   }
+  let units = DEFAULT_UNITS
   for (const pair of pairs) {
     const colon = pair.indexOf(':')
     if (colon === -1) continue
+    if (pair.slice(0, colon) === UNITS_KEY) {
+      units = parseUnits(pair.slice(colon + 1))
+      continue
+    }
     const field = FIELD_BY_N.get(Number(pair.slice(0, colon)))
     const value = field && unpackValue(field, pair.slice(colon + 1))
     if (field && value !== undefined) raw[field.key] = value
   }
-  return { tune: withDefaults(normaliseTune(raw as Tune, car.drivetrain)), car }
+  return { tune: withDefaults(normaliseTune(raw as Tune, car.drivetrain)), car, units }
 }

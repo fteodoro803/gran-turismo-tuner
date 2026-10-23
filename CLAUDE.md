@@ -37,7 +37,7 @@ How code is written in this project. A decision in `DECISIONS.md` that creates a
 
 **Ids:** A car id is a whole number (D15). Once it has appeared in a shared link, it is never changed or reused (D8). A new car takes the next number up, and gaps are never filled. If a car is renamed, add a new entry and keep the old one.
 
-**Link format:** A field's number `n` in `schema.ts` is permanent: never change or reuse it, and give a new field the next free number (D17). Enum options are append-only, because a link stores an option's position. Anything that old links can't be read with bumps the version in `src/tune/codec.ts`. The saved-link test in `codec.test.ts` fails if either rule is broken.
+**Link format:** A field's number `n` in `schema.ts` is permanent: never change or reuse it, and give a new field the next free number (D17). Enum options and unit options (`UNIT_OPTIONS` in `units.ts`) are append-only, because a link stores an option's position. Anything that old links can't be read with bumps the version in `src/tune/codec.ts`. The saved-link test in `codec.test.ts` fails if either rule is broken.
 
 **Assets:** Use relative paths only. The app is served from `/lab/<id>/` on the portfolio, so `base` stays `'./'` in `vite.config.ts`. Everything in `dist/` is public.
 
