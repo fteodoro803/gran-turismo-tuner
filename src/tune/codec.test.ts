@@ -8,8 +8,7 @@ import type { Tune } from './types'
 const fr = CARS.find((c) => c.drivetrain === 'FR')!
 const fourWd = CARS.find((c) => c.drivetrain === '4WD')!
 
-// The JSON a link holds, for checking what was left out.
-const json = (link: string) => JSON.parse(atob(link.replace(/-/g, '+').replace(/_/g, '/')))
+const n = (key: string) => FIELDS.find((f) => f.key === key)!.n
 
 const sample: Tune = withDefaults({
   maxPower: 520,
@@ -37,19 +36,27 @@ describe('encode and decode', () => {
   })
 
   it('leaves defaults out of the link', () => {
-    expect(json(encode({ tune: defaultTune(), car: fr }))).toEqual({ v: 1, c: fr.id, t: {} })
+    expect(encode({ tune: defaultTune(), car: fr })).toBe(`1,${fr.id},0`)
   })
 
-  it('stores toggles as 1, enums by option position and gears as a list', () => {
-    const { t } = json(encode({ tune: sample, car: fr }))
-    const n = (key: string) => FIELDS.find((f) => f.key === key)!.n
-    expect(t[n('boreUp')]).toBe(1)
-    expect(t[n('tiresFront')]).toBe(8)
-    expect(t[n('gearRatios')]).toEqual([[3.587, 2.022, 1.384], 4.1])
+  it('writes enums by option position, numbers as they are and gears as a list', () => {
+    const pairs = encode({ tune: sample, car: fr }).split(',').slice(3)
+    expect(pairs).toContain(`${n('tiresFront')}:8`)
+    expect(pairs).toContain(`${n('maxPower')}:520`)
+    expect(pairs).toContain(`${n('suspFrontToe')}:-0.05`)
+    expect(pairs).toContain(`${n('gearRatios')}:3.587/2.022/1.384~4.1`)
+  })
+
+  it('packs every toggle that is on into one number, not one entry each', () => {
+    const tune = withDefaults({ boreUp: true, strokeUp: true, bodyRigidity: true })
+    const parts = encode({ tune, car: fr }).split(',')
+    expect(parts).toHaveLength(3)
+    const all = withDefaults({ boreUp: true, strokeUp: true, bodyRigidity: true })
+    expect(decode(parts.join(','))?.tune).toEqual(all)
   })
 
   it('uses only characters that are safe in a URL', () => {
-    expect(encode({ tune: sample, car: fr })).toMatch(/^[A-Za-z0-9_-]+$/)
+    expect(encode({ tune: sample, car: fr })).toMatch(/^[0-9a-z.,:~/-]+$/)
   })
 
   it('drops values for locked fields', () => {
@@ -69,8 +76,7 @@ describe('encode and decode', () => {
 // changed, and every link already shared would now open as a different tune (#5). Only ever add
 // new fields and options at the end.
 describe('a saved link', () => {
-  const SAVED =
-    'eyJ2IjoxLCJjIjoxLCJ0Ijp7IjEiOjUyMCwiNyI6OCwiOSI6NCwiMTYiOi0wLjA1LCIzNSI6MiwiNDIiOltbMy41ODcsMi4wMjJdLDQuMV0sIjYyIjoxfX0'
+  const SAVED = '1,1,32qytpjad81b56o,1:520,7:8,9:4,16:-0.05,35:2,42:3.587/2.022~4.1'
 
   it('still opens as the same tune', () => {
     const result = decode(SAVED)
@@ -80,6 +86,7 @@ describe('a saved link', () => {
         maxPower: 520,
         tiresFront: 'Racing Soft',
         boreUp: true,
+        bodyRigidity: true,
         suspension: 'Fully Customised Suspension',
         suspFrontToe: -0.05,
         ecu: 'Full Control Computer',
@@ -90,47 +97,48 @@ describe('a saved link', () => {
 })
 
 describe('decode on a bad link', () => {
-  const link = (data: unknown) => btoa(JSON.stringify(data)).replace(/=+$/, '')
-
   it('returns undefined for text that is not a link', () => {
-    for (const text of ['', 'not a link', '%%%', 'e30', link(null), link([1, 2]), link('hello')]) {
+    for (const text of ['', 'not a link', '%%%', '1', '1,', '1,1', '1,1,', 'eyJ2IjoxfQ']) {
       expect(decode(text), text).toBeUndefined()
     }
   })
 
   it('returns undefined for a version it does not know', () => {
-    expect(decode(link({ v: 2, c: fr.id, t: {} }))).toBeUndefined()
-    expect(decode(link({ c: fr.id, t: {} }))).toBeUndefined()
+    expect(decode(`2,${fr.id},0`)).toBeUndefined()
+    expect(decode(`${fr.id},0`)).toBeUndefined()
   })
 
   it('returns undefined for a car that is not in the list', () => {
-    expect(decode(link({ v: 1, c: 999999, t: {} }))).toBeUndefined()
-    expect(decode(link({ v: 1, c: 'one', t: {} }))).toBeUndefined()
-    expect(decode(link({ v: 1, t: {} }))).toBeUndefined()
+    expect(decode('1,999999,0')).toBeUndefined()
+    expect(decode('1,one,0')).toBeUndefined()
+    expect(decode('1,-3,0')).toBeUndefined()
+  })
+
+  it('returns undefined when the toggles are not a base 36 number', () => {
+    expect(decode(`1,${fr.id},!!`)).toBeUndefined()
+    expect(decode(`1,${fr.id},-1`)).toBeUndefined()
   })
 
   it('ignores unknown field numbers and unreadable values, and keeps the rest', () => {
-    const n = (key: string) => FIELDS.find((f) => f.key === key)!.n
-    const result = decode(
-      link({
-        v: 1,
-        c: fr.id,
-        t: {
-          [n('maxPower')]: 400,
-          [n('tiresFront')]: 99,
-          [n('boreUp')]: 'yes',
-          [n('gearRatios')]: 'fast',
-          9999: 1,
-        },
-      }),
-    )
+    const link = [
+      `1,${fr.id},0`,
+      `${n('maxPower')}:400`,
+      `${n('tiresFront')}:99`,
+      `${n('maxTorque')}:fast`,
+      `${n('gearRatios')}:3.5/x`,
+      `${n('boreUp')}:1`,
+      '9999:1',
+      'junk',
+    ].join(',')
+    const result = decode(link)
     expect(result?.tune.maxPower).toBe(400)
     expect(result?.tune.tiresFront).toBe('Comfort Hard')
-    expect(result?.tune.boreUp).toBe(false)
+    expect(result?.tune.maxTorque).toBeUndefined()
     expect(result?.tune.gearRatios).toBeUndefined()
+    expect(result?.tune.boreUp).toBe(false)
   })
 
-  it('opens a link with no tune section as an empty tune', () => {
-    expect(decode(link({ v: 1, c: fr.id }))?.tune).toEqual(defaultTune())
+  it('opens a link with no fields as an empty tune', () => {
+    expect(decode(`1,${fr.id},0`)?.tune).toEqual(defaultTune())
   })
 })

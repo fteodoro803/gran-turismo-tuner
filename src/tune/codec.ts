@@ -1,10 +1,12 @@
 // The share-link codec: turns a car and a tune into the text after the `#`, and back (#5).
 //
-// Link format (D2), before base64url: {"v":1,"c":<car id>,"t":{"<field n>":<value>, ...}}
-// - Fields are keyed by their permanent number `n` from the schema, so renaming or reordering a
-//   field never changes what an old link means.
-// - Defaults are left out: a toggle is present as 1 when on, an enum as the position of its option
-//   in the schema (so options are append-only), a number as itself, gears as [[g1, g2, ...], final].
+// Link format (D2), plain text with no JSON and no base64, parts separated by commas:
+//   <version>,<car id>,<toggles>,<n>:<value>,<n>:<value>,...
+// - Each field is named by its permanent number `n` from the schema, so renaming or reordering
+//   a field never changes what an old link means.
+// - Toggles that are on share one number: bit (n - 1) is set for each, written in base 36.
+// - Everything else is left out at its default. An enum is the position of its option in the
+//   schema (so options are append-only), a number is itself, and gears are `g1/g2/g3~final`.
 
 import { CARS } from '../data/cars'
 import type { Car } from '../components/CarPicker'
@@ -25,55 +27,57 @@ const VERSION = 1
 const FIELD_BY_N = new Map<number, FieldDef>(FIELDS.map((f) => [f.n, f]))
 const CAR_BY_ID = new Map<number, Car>(CARS.map((c) => [c.id, c]))
 
-// ===== base64url over UTF-8 text =====
+const NUMBER = /^-?\d+(\.\d+)?$/
+const WHOLE = /^\d+$/
 
-function toBase64Url(text: string): string {
-  const bytes = new TextEncoder().encode(text)
-  let binary = ''
-  for (const b of bytes) binary += String.fromCharCode(b)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+// ===== toggles, packed into one number =====
+
+const bit = (field: FieldDef) => 1n << BigInt(field.n - 1)
+
+function parseBase36(text: string): bigint | undefined {
+  if (!/^[0-9a-z]+$/.test(text)) return undefined
+  let value = 0n
+  for (const ch of text) value = value * 36n + BigInt(parseInt(ch, 36))
+  return value
 }
 
-function fromBase64Url(encoded: string): string {
-  const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
-  const binary = atob(base64)
-  return new TextDecoder().decode(Uint8Array.from(binary, (c) => c.charCodeAt(0)))
-}
+// ===== one field's value <-> its text =====
 
-// ===== one field's value <-> its compact form =====
-
-// The compact form of a value, or undefined when it equals the default and can be left out.
-function packValue(field: FieldDef, value: unknown): unknown {
+// The text for a value, or undefined when it equals the default and can be left out.
+function packValue(field: FieldDef, value: unknown): string | undefined {
   switch (field.kind) {
     case 'toggle':
-      return value === true ? 1 : undefined
+      return undefined
     case 'enum': {
       const position = field.options.indexOf(value as string)
-      return position > 0 ? position : undefined
+      return position > 0 ? String(position) : undefined
     }
     case 'gears': {
       const { gears, final } = value as GearSet
-      return final === undefined ? [gears] : [gears, final]
+      return final === undefined ? gears.join('/') : `${gears.join('/')}~${final}`
     }
     default:
-      return value
+      return String(value)
   }
 }
 
-// The real value for a compact one, or undefined when it can't be read. Numbers are passed
+// The real value for a piece of text, or undefined when it can't be read. Numbers are passed
 // through as they are, since normaliseTune clamps them afterwards.
-function unpackValue(field: FieldDef, packed: unknown): unknown {
+function unpackValue(field: FieldDef, text: string): unknown {
   switch (field.kind) {
     case 'toggle':
-      return packed === 1 ? true : undefined
+      return undefined
     case 'enum':
-      return Number.isInteger(packed) ? field.options[packed as number] : undefined
+      return WHOLE.test(text) ? field.options[Number(text)] : undefined
     case 'gears': {
-      if (!Array.isArray(packed) || !Array.isArray(packed[0])) return undefined
-      return packed[1] === undefined ? { gears: packed[0] } : { gears: packed[0], final: packed[1] }
+      const [list, final, ...extra] = text.split('~')
+      const gears = list === '' ? [] : list.split('/')
+      const numbers = [...gears, ...(final === undefined ? [] : [final])]
+      if (extra.length > 0 || !numbers.every((s) => NUMBER.test(s))) return undefined
+      return final === undefined ? { gears: gears.map(Number) } : { gears: gears.map(Number), final: Number(final) }
     }
     default:
-      return packed
+      return NUMBER.test(text) ? Number(text) : undefined
   }
 }
 
@@ -82,43 +86,47 @@ function unpackValue(field: FieldDef, packed: unknown): unknown {
 // The text for after the `#`: the car and the tune with everything left at its default dropped.
 //
 // 1. Clean the tune for the car's drivetrain, so a value for a locked field is not shared (D6).
-// 2. Pack each field that is set and not at its default, keyed by its number.
-// 3. Write the JSON as UTF-8 and encode it as base64url.
+// 2. Set one bit for each toggle that is on.
+// 3. Write each other field that is set and not at its default as `n:value`.
 export function encode({ tune, car }: LinkContents): string {
   const cleaned = normaliseTune(tune, car.drivetrain) as Record<string, unknown>
-  const packed: Record<number, unknown> = {}
+  let toggles = 0n
+  const pairs: string[] = []
   for (const field of FIELDS) {
     const value = cleaned[field.key]
     if (value === undefined) continue
-    const compact = packValue(field, value)
-    if (compact !== undefined) packed[field.n] = compact
+    if (field.kind === 'toggle') {
+      if (value === true) toggles |= bit(field)
+      continue
+    }
+    const text = packValue(field, value)
+    if (text !== undefined) pairs.push(`${field.n}:${text}`)
   }
-  return toBase64Url(JSON.stringify({ v: VERSION, c: car.id, t: packed }))
+  return [VERSION, car.id, toggles.toString(36), ...pairs].join(',')
 }
 
 // The car and tune a link holds, or undefined when the link cannot be read.
 //
-// Unreadable means: not base64url or JSON, a version this code doesn't know, or a car that isn't
-// in the list. Anything wrong inside a single field is dropped quietly and the rest still opens.
+// Unreadable means: the start isn't `version,car,toggles`, a version this code doesn't know, or a
+// car that isn't in the list. Anything wrong inside a single field is dropped quietly and the
+// rest still opens.
 export function decode(text: string): LinkContents | undefined {
-  try {
-    const data: unknown = JSON.parse(fromBase64Url(text))
-    if (typeof data !== 'object' || data === null) return undefined
-    const { v, c, t } = data as { v?: unknown; c?: unknown; t?: unknown }
-    if (v !== VERSION) return undefined
-    const car = typeof c === 'number' ? CAR_BY_ID.get(c) : undefined
-    if (!car) return undefined
+  const [version, carId, togglesText, ...pairs] = text.split(',')
+  if (version !== String(VERSION) || !WHOLE.test(carId ?? '')) return undefined
+  const car = CAR_BY_ID.get(Number(carId))
+  const toggles = parseBase36(togglesText ?? '')
+  if (!car || toggles === undefined) return undefined
 
-    const raw: Record<string, unknown> = {}
-    if (typeof t === 'object' && t !== null) {
-      for (const [n, packed] of Object.entries(t)) {
-        const field = FIELD_BY_N.get(Number(n))
-        const value = field && unpackValue(field, packed)
-        if (field && value !== undefined) raw[field.key] = value
-      }
-    }
-    return { tune: withDefaults(normaliseTune(raw as Tune, car.drivetrain)), car }
-  } catch {
-    return undefined
+  const raw: Record<string, unknown> = {}
+  for (const field of FIELDS) {
+    if (field.kind === 'toggle' && (toggles & bit(field)) !== 0n) raw[field.key] = true
   }
+  for (const pair of pairs) {
+    const colon = pair.indexOf(':')
+    if (colon === -1) continue
+    const field = FIELD_BY_N.get(Number(pair.slice(0, colon)))
+    const value = field && unpackValue(field, pair.slice(colon + 1))
+    if (field && value !== undefined) raw[field.key] = value
+  }
+  return { tune: withDefaults(normaliseTune(raw as Tune, car.drivetrain)), car }
 }
