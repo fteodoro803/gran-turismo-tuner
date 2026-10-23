@@ -31,7 +31,8 @@ export function FieldInput({ field, tune, drivetrain, onChange, bare }: Props) {
   switch (field.kind) {
     case 'toggle':
       return (
-        <div className="field field-toggle" data-disabled={!enabled}>
+        // The whole row is the label, so a click anywhere on it flips the checkbox.
+        <label className="field field-toggle" htmlFor={id} data-disabled={!enabled}>
           <input
             id={id}
             type="checkbox"
@@ -39,8 +40,8 @@ export function FieldInput({ field, tune, drivetrain, onChange, bare }: Props) {
             disabled={!enabled}
             onChange={(e) => onChange(key, e.target.checked)}
           />
-          <label htmlFor={id} className={labelClass}>{field.label}</label>
-        </div>
+          <span className={labelClass}>{field.label}</span>
+        </label>
       )
 
     case 'enum':

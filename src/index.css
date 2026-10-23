@@ -117,11 +117,20 @@ select:focus-visible {
   background: none;
 }
 
-/* Toggles: label on the left, checkbox on the right, like the other rows. */
+/* Toggles: the whole row is clickable, with the label on the left and checkbox on the right. */
 .field-toggle {
   display: flex;
   flex-direction: row-reverse;
   justify-content: space-between;
+  font-size: var(--label-size);
+  line-height: 1.15;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.field-toggle:not([data-disabled='true']):hover {
+  background: var(--focus-tint);
+  border-left-color: var(--focus);
 }
 
 .field-toggle input {
@@ -139,7 +148,8 @@ select:focus-visible {
 
 .field[data-disabled='true'] input,
 .field[data-disabled='true'] select,
-.field[data-disabled='true'] label {
+.field[data-disabled='true'] label,
+.field-toggle[data-disabled='true'] {
   cursor: not-allowed;
 }
 
