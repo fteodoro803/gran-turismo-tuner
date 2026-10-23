@@ -311,6 +311,30 @@ select:disabled {
 
 /* Buttons: a solid accent one for the main action, and a quiet outlined one. */
 .button {
+/* The question mark that stands in while no car is chosen, in the border colour on the card. */
+.car-placeholder span {
+  align-self: center;
+  font-size: 8rem;
+  line-height: 1;
+  color: var(--border);
+}
+
+/* On the first page the picture area has one fixed height, whatever fills it (a picture, the
+   question mark, or nothing loaded yet), so the Enter button below never moves. */
+.picker .car-image {
+  align-items: center;
+  height: 11rem;
+  min-height: 11rem;
+  max-height: 11rem;
+}
+
+.picker .car-image img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
   min-height: 2.5rem;
   padding: 0 1.25rem;
   font: inherit;
@@ -323,7 +347,9 @@ select:disabled {
 }
 
 .button:disabled {
-  opacity: 0.45;
+  color: var(--muted);
+  background: var(--border);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -332,6 +358,7 @@ select:disabled {
   outline-offset: 2px;
 }
 
+/* Greyed out rather than just faded, so a disabled Enter doesn't look like a dimmed accent button. */
 .button-quiet {
   min-height: 2rem;
   margin: 0.25rem 0 0.125rem;
