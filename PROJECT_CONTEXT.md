@@ -20,7 +20,7 @@ Started in October 2026 from the idea that GT7 tune sharing by screenshot and sp
 - **Done:** D1 (scaffold), D2 (tune data model) and D6 (tuning form, PR #19). The design pass (#20) adds a first page with the title, disclaimer and a car picker, and a one-page tuning form that scales to fit the screen. The picker runs on the full 580-car list in `src/data/cars.json` (#4), with each car's picture shown from the git-ignored `public/car-images/` (D11).
 - **Next:** D3 (car data from screenshots), D4 (link codec), D5 (car picker), D7 (special inputs), D8 (units), D9 (view and share), D10 (ship to the portfolio), Each is an issue on GitHub. D5 (#12) is mostly done: the picker UI and the car list (#4) exist. Share links (#5) work: the tuning page has a Copy link button and a link opens the form filled in. Showing numbers in the viewer's own units is still to do (#14).
 
-Portfolio rules the build must follow: relative asset paths (`base: './'`), an `index.html` in the output folder, a "← Back to Lab" link, no dependency on the portfolio's CSS, and no backend. The portfolio does not rebuild when this repo changes, so run its deploy workflow after each release.
+Portfolio rules the build must follow: relative asset paths (`base: './'`), an `index.html` in the output folder, a "← Back to Projects" link, no dependency on the portfolio's CSS, and no backend. The portfolio does not rebuild when this repo changes, so run its deploy workflow after each release.
 
 ## Known issues
 

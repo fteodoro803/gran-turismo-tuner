@@ -38,7 +38,7 @@ TypeScript, React 19, Vite, Vitest with Testing Library, and oxlint. The build i
 
 ## Part of the portfolio Lab
 
-This app runs as a Lab tool on [fteodoro803/portfolio](https://github.com/fteodoro803/portfolio), served from `/lab/<id>/`. That is why asset paths are relative (`base: './'` in `vite.config.ts`) and why the first page has a "← Back to Lab" link.
+This app runs as a Lab tool on [fteodoro803/portfolio](https://github.com/fteodoro803/portfolio), served from `/lab/<id>/`. That is why asset paths are relative (`base: './'` in `vite.config.ts`) and why the first page has a "← Back to Projects" link.
 
 The portfolio clones this repo and runs `npm ci && npm run build`, then publishes `dist/`. It does not rebuild when this repo changes, so after each release run its deploy workflow:
 

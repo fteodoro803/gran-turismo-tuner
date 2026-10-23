@@ -47,7 +47,7 @@ export function CarPicker({ cars, initial, notice, onEnter }: Props) {
 
   return (
     <div className="landing">
-      <a href="../">← Back to Lab</a>
+      <a href="../">← Back to Projects</a>
       <h1>GT7 Tune Sharing</h1>
       <p>Fan project, not affiliated with Sony Interactive Entertainment or Polyphony Digital.</p>
       {notice && <p role="alert" className="notice">{notice}</p>}

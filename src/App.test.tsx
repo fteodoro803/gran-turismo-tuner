@@ -30,7 +30,7 @@ describe('App', () => {
     render(<App />)
     expect(screen.getByRole('heading', { level: 1, name: 'GT7 Tune Sharing' })).toBeInTheDocument()
     expect(screen.getByText(/not affiliated with Sony/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Back to Lab/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Back to Projects/ })).toBeInTheDocument()
     expect(screen.queryByLabelText('Toe Angle')).not.toBeInTheDocument()
   })
 
