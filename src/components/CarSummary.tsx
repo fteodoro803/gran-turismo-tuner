@@ -6,18 +6,18 @@ interface Props {
   onChangeCar: () => void
 }
 
-// A car's name with its manufacturer in front, unless the name already starts with it.
-const carLabel = ({ manufacturer, name }: CarChoice['car']) =>
-  name.startsWith(manufacturer) ? name : `${manufacturer} ${name}`
-
-// The car and drivetrain at the top of the General panel, with the way back to the first page (#12).
+// The manufacturer, car and drivetrain at the top of the General panel, with the way back to the first page (#12).
 export function CarSummary({ choice, onChangeCar }: Props) {
   return (
     <div className="car-summary">
       <CarImage key={choice.car.id} image={choice.car.image} className="car-image-small" />
       <div className="readout-row">
+        <span>Manufacturer</span>
+        <strong>{choice.car.manufacturer}</strong>
+      </div>
+      <div className="readout-row">
         <span>Car</span>
-        <strong>{carLabel(choice.car)}</strong>
+        <strong>{choice.car.name}</strong>
       </div>
       <div className="readout-row">
         <span>Drivetrain</span>

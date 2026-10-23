@@ -351,6 +351,12 @@ select:disabled {
   border: 1px solid var(--border);
 }
 
+/* The same tint and accent as a hovered row, so the quiet button reads as clickable. */
+.button-quiet:hover:not(:disabled) {
+  background: var(--focus-tint);
+  border-color: var(--focus);
+}
+
 /* The first page: a narrow centred column with the picker in a panel. */
 .landing {
   display: flex;
