@@ -52,25 +52,19 @@ describe('CarPicker', () => {
     expect(enter()).toBeDisabled()
   })
 
-  it('sends the car and its drivetrain on Enter', async () => {
+  it('sends the chosen car on Enter', async () => {
     const user = userEvent.setup()
     const onEnter = vi.fn()
     render(<CarPicker cars={CARS} onEnter={onEnter} />)
     await user.selectOptions(screen.getByLabelText('Manufacturer'), 'Beta')
     await user.selectOptions(screen.getByLabelText('Model'), 'Uno')
     await user.click(enter())
-    expect(onEnter).toHaveBeenCalledWith({ car: CARS[2], drivetrain: 'MR' })
+    expect(onEnter).toHaveBeenCalledWith({ car: CARS[2] })
   })
 
-  it("lets an unlisted car enter with just a drivetrain", async () => {
-    const user = userEvent.setup()
-    const onEnter = vi.fn()
-    render(<CarPicker cars={CARS} onEnter={onEnter} />)
-    await user.selectOptions(screen.getByLabelText('Manufacturer'), "My car isn't listed")
-    expect(enter()).toBeDisabled()
-    await user.selectOptions(screen.getByLabelText('Drivetrain'), 'RR')
-    await user.click(enter())
-    expect(onEnter).toHaveBeenCalledWith({ drivetrain: 'RR' })
+  it('has no option for a car that is not in the list', () => {
+    render(<CarPicker cars={CARS} onEnter={vi.fn()} />)
+    expect(screen.queryByRole('option', { name: /isn't listed/ })).not.toBeInTheDocument()
   })
 
   it("shows a car's picture only if the car has an image", async () => {

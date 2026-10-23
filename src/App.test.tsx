@@ -1,15 +1,27 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
+import { CARS } from './data/cars'
+import { decode, encode } from './tune/codec'
+import { withDefaults } from './tune/defaults'
 import { SECTIONS } from './tune/schema'
+import type { Drivetrain } from './tune/types'
 
 type User = ReturnType<typeof userEvent.setup>
 
-// Gets past the first page the way a person with an unlisted car would.
-async function enter(user: User, drivetrain: string) {
-  await user.selectOptions(screen.getByLabelText('Manufacturer'), "My car isn't listed")
-  await user.selectOptions(screen.getByLabelText('Drivetrain'), drivetrain)
+// The first real car with the given drivetrain.
+const carWith = (drivetrain: Drivetrain) => CARS.find((c) => c.drivetrain === drivetrain)!
+
+// Picks a car in the picker, without pressing Enter.
+async function pick(user: User, car: (typeof CARS)[number]) {
+  await user.selectOptions(screen.getByLabelText('Manufacturer'), car.manufacturer)
+  await user.selectOptions(screen.getByLabelText('Model'), String(car.id))
+}
+
+// Gets past the first page with a car that has the given drivetrain.
+async function enter(user: User, drivetrain: Drivetrain) {
+  await pick(user, carWith(drivetrain))
   await user.click(screen.getByRole('button', { name: 'Enter' }))
 }
 
@@ -41,8 +53,8 @@ describe('App', () => {
 
     // Change car goes back to the picker, which remembers the last choice.
     await user.click(screen.getByRole('button', { name: 'Change car' }))
-    expect(screen.getByLabelText('Drivetrain')).toHaveValue('FR')
-    await user.selectOptions(screen.getByLabelText('Drivetrain'), '4WD')
+    expect(screen.getByLabelText('Manufacturer')).toHaveValue(carWith('FR').manufacturer)
+    await pick(user, carWith('4WD'))
     await user.click(screen.getByRole('button', { name: 'Enter' }))
     expect(frontInitial()).toBeEnabled()
   })
@@ -53,7 +65,8 @@ describe('App', () => {
     await enter(user, '4WD')
     await user.click(screen.getByRole('button', { name: '← Back' }))
     expect(screen.getByRole('heading', { level: 1, name: 'GT7 Tune Sharing' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Drivetrain')).toHaveValue('4WD')
+    expect(screen.getByLabelText('Manufacturer')).toHaveValue(carWith('4WD').manufacturer)
+    expect(screen.getByLabelText('Model')).toHaveValue(String(carWith('4WD').id))
   })
 
   it('keeps the tune when you change the car', async () => {
@@ -102,5 +115,55 @@ describe('App', () => {
     const toes = screen.getAllByLabelText('Toe Angle')
     expect(toes).toHaveLength(2)
     expect(toes[0].closest('.pair-row')).toBe(toes[1].closest('.pair-row'))
+  })
+})
+
+describe('share links', () => {
+  afterEach(() => {
+    window.location.hash = ''
+  })
+
+  it('opens a link on the tuning page with the car and tune filled in', () => {
+    const car = carWith('4WD')
+    window.location.hash = encode({ car, tune: withDefaults({ suspension: 'Street', maxPower: 480 }) })
+    render(<App />)
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Suspension')).toHaveValue('Street')
+    expect(screen.getByLabelText('Max Power')).toHaveValue('480')
+    expect(screen.getByText(car.drivetrain)).toBeInTheDocument()
+  })
+
+  it('lets a person change a tune they opened from a link', async () => {
+    const user = userEvent.setup()
+    window.location.hash = encode({ car: carWith('FR'), tune: withDefaults({ suspension: 'Street' }) })
+    render(<App />)
+    await user.selectOptions(screen.getByLabelText('Suspension'), 'Normal')
+    expect(screen.getByLabelText('Suspension')).toHaveValue('Normal')
+  })
+
+  it("says so and starts on the car picker when a link can't be opened", () => {
+    window.location.hash = 'not-a-real-link'
+    render(<App />)
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't open this link")
+    expect(screen.getByRole('heading', { level: 1, name: 'GT7 Tune Sharing' })).toBeInTheDocument()
+  })
+
+  it('shows no message when there is no link', () => {
+    render(<App />)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('copies a link for the current car and tune', async () => {
+    const user = userEvent.setup()
+    const car = carWith('FR')
+    render(<App />)
+    await enter(user, 'FR')
+    await user.selectOptions(screen.getByLabelText('Suspension'), 'Sports Suspension')
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+    expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+    const copied = await navigator.clipboard.readText()
+    const decoded = decode(copied.split('#')[1])
+    expect(decoded?.car).toBe(car)
+    expect(decoded?.tune.suspension).toBe('Sports Suspension')
   })
 })

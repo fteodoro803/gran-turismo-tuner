@@ -37,6 +37,8 @@ How code is written in this project. A decision in `DECISIONS.md` that creates a
 
 **Ids:** A car id is a whole number (D15). Once it has appeared in a shared link, it is never changed or reused (D8). A new car takes the next number up, and gaps are never filled. If a car is renamed, add a new entry and keep the old one.
 
+**Link format:** A field's number `n` in `schema.ts` is permanent: never change or reuse it, and give a new field the next free number (D17). Enum options are append-only, because a link stores an option's position. Anything that old links can't be read with bumps the version in `src/tune/codec.ts`. The saved-link test in `codec.test.ts` fails if either rule is broken.
+
 **Assets:** Use relative paths only. The app is served from `/lab/<id>/` on the portfolio, so `base` stays `'./'` in `vite.config.ts`. Everything in `dist/` is public.
 
 **No third-party artwork:** Don't add Sony or manufacturer images, logos or scraped content to the app, the build or `dist/` (D1). The one exception is the reference screenshots in `docs/reference/` (D10), which are never imported by code or served. Any other raw screenshots stay in the git-ignored `screenshots/` folder. Temporary exception (D11): Sony's car pictures live only in the git-ignored `public/car-images/<manufacturer>/<car>.png`, each named by its car's `image` field in `cars.json`, for a local design preview. Never commit them, and never deploy a `dist/` built while they are there. Replace them with the owner's own screenshots before release.
